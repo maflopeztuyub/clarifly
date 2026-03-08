@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   description:
     'Clarifly helps SPED students by recording lectures, generating smart task lists, and reading content aloud for clarity and accessibility.',
   icons: {
-    icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🎤</text></svg>',
+    icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90"></text></svg>',
   },
 };
 

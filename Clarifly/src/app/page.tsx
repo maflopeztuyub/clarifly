@@ -74,22 +74,6 @@ export default function Home() {
           )}
         </div>
       </div>
-
-      {/* Footer */}
-      <footer className="bg-gray-50 border-t border-gray-200 py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <div>
-              <h3 className="font-bold text-gray-900">Clarifly</h3>
-              <p className="text-sm text-gray-600">Making classroom content clearer for all students</p>
-            </div>
-            <div className="text-sm text-gray-500">
-              <p>♿ Designed with accessibility in mind for SPED students and all learners</p>
-              <p>🎯 MVP v0.1.0 • Built with Next.js, TypeScript & Tailwind CSS</p>
-            </div>
-          </div>
-        </div>
-      </footer>
     </main>
   );
 }
