@@ -46,23 +46,6 @@ export default function Home() {
     <main className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-yellow-50">
       <Navbar />
 
-      {/* Hero Section */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
-        <div className="text-center mb-12">
-          <h2 className="text-5xl lg:text-6xl font-bold text-gray-900 mb-4">
-            Record. Understand. Succeed.
-          </h2>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-8">
-            Clarifly transforms your lectures into clear, actionable task lists. Designed for students who benefit from clearer instructions and multi-sensory learning.
-          </p>
-          <div className="flex flex-wrap justify-center gap-4">
-            <span className="px-4 py-2 bg-blue-100 text-blue-800 rounded-full text-sm font-semibold">🎤 Audio Recording</span>
-            <span className="px-4 py-2 bg-purple-100 text-purple-800 rounded-full text-sm font-semibold">✓ Task Generation</span>
-            <span className="px-4 py-2 bg-green-100 text-green-800 rounded-full text-sm font-semibold">🔊 Text-to-Speech</span>
-          </div>
-        </div>
-      </div>
-
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12 lg:pb-16">
         <div className="space-y-8">
