@@ -63,9 +63,6 @@ export default function RecorderPanel({ onRecordingComplete, disabled = false }:
 
   return (
     <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100">
-      <h2 className="text-3xl font-bold text-gray-900 mb-2">Record Lecture Audio</h2>
-      <p className="text-gray-600 mb-8">Click the button below to start recording. We'll convert your audio to text and generate helpful task lists.</p>
-
       {error && (
         <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
           <p className="text-red-800 font-medium">⚠️ {error}</p>
@@ -80,33 +77,10 @@ export default function RecorderPanel({ onRecordingComplete, disabled = false }:
             <div className="text-5xl font-bold text-blue-600 font-mono mb-2">{formatTime(duration)}</div>
             {state === 'recording' && (
               <div className="flex items-center justify-center gap-2">
-                <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
-                <span className="text-gray-600 font-medium">Recording in progress...</span>
               </div>
             )}
           </div>
         )}
-
-        {/* Recording State Indicator */}
-        <div className="flex items-center justify-center gap-3">
-          <div
-            className={`w-4 h-4 rounded-full ${
-              state === 'recording'
-                ? 'bg-red-500 animate-pulse'
-                : state === 'processing'
-                  ? 'bg-blue-500 animate-pulse'
-                  : state === 'ready'
-                    ? 'bg-green-500'
-                    : 'bg-gray-300'
-            }`}
-          ></div>
-          <span className="text-sm font-medium text-gray-700">
-            {state === 'idle' && 'Ready to record'}
-            {state === 'recording' && 'Recording...'}
-            {state === 'processing' && 'Processing audio...'}
-            {state === 'ready' && 'Ready for playback'}
-          </span>
-        </div>
 
         {/* Action Buttons */}
         <div className="flex gap-4 w-full max-w-sm">
@@ -116,7 +90,7 @@ export default function RecorderPanel({ onRecordingComplete, disabled = false }:
               disabled={disabled}
               className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 disabled:from-gray-400 disabled:to-gray-400 disabled:cursor-not-allowed text-white font-bold py-4 px-6 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 text-lg"
             >
-              <span>🎤</span> Start Recording
+              Repeat
             </button>
           )}
 
@@ -125,7 +99,7 @@ export default function RecorderPanel({ onRecordingComplete, disabled = false }:
               onClick={handleStopRecording}
               className="flex-1 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-bold py-4 px-6 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 text-lg"
             >
-              <span>⏹️</span> Stop Recording
+              Stop
             </button>
           )}
 
@@ -135,7 +109,7 @@ export default function RecorderPanel({ onRecordingComplete, disabled = false }:
               disabled={disabled}
               className="flex-1 bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 disabled:from-gray-400 disabled:to-gray-400 disabled:cursor-not-allowed text-white font-bold py-4 px-6 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 text-lg"
             >
-              <span>🔄</span> Record Again
+              Again
             </button>
           )}
 
@@ -148,13 +122,6 @@ export default function RecorderPanel({ onRecordingComplete, disabled = false }:
             </button>
           )}
         </div>
-
-        <p className="text-center text-sm text-gray-500 mt-4">
-          {state === 'idle' && '💡 Tip: Make sure your microphone is working before you start recording.'}
-          {state === 'recording' && '📝 Speak clearly and naturally. We\'ll capture everything you say.'}
-          {state === 'processing' && '⚡ Converting your audio to text and generating tasks...'}
-          {state === 'ready' && '✅ Your audio has been recorded and processed.'}
-        </p>
       </div>
     </div>
   );

@@ -19,7 +19,6 @@ export default function Navbar() {
             </div>
             <h1 className="text-2xl font-bold text-gray-900">Clarifly</h1>
           </div>
-          <p className="hidden md:block text-sm text-gray-600">Smart classroom assistant for SPED students</p>
         </div>
       </div>
     </nav>
