@@ -71,24 +71,18 @@ export default function RecorderPanel({ onRecordingComplete, disabled = false }:
       )}
 
       <div className="flex flex-col items-center gap-6">
-        {/* Timer Display */}
         {(state === 'recording' || (state === 'ready' && duration > 0)) && (
           <div className="text-center">
             <div className="text-5xl font-bold text-blue-600 font-mono mb-2">{formatTime(duration)}</div>
-            {state === 'recording' && (
-              <div className="flex items-center justify-center gap-2">
-              </div>
-            )}
           </div>
         )}
 
-        {/* Action Buttons */}
-        <div className="flex gap-4 w-full max-w-sm">
+        <div className="flex justify-center w-full">
           {state === 'idle' && (
             <button
               onClick={handleStartRecording}
               disabled={disabled}
-              className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 disabled:from-gray-400 disabled:to-gray-400 disabled:cursor-not-allowed text-white font-bold py-4 px-6 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 text-lg"
+              className="w-44 h-44 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 disabled:from-gray-400 disabled:to-gray-400 disabled:cursor-not-allowed text-white font-bold text-2xl shadow-xl transition-all duration-200 flex items-center justify-center"
             >
               Repeat
             </button>
@@ -97,7 +91,7 @@ export default function RecorderPanel({ onRecordingComplete, disabled = false }:
           {state === 'recording' && (
             <button
               onClick={handleStopRecording}
-              className="flex-1 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-bold py-4 px-6 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 text-lg"
+              className="w-44 h-44 rounded-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-bold text-2xl shadow-xl transition-all duration-200 flex items-center justify-center"
             >
               Stop
             </button>
@@ -107,18 +101,18 @@ export default function RecorderPanel({ onRecordingComplete, disabled = false }:
             <button
               onClick={handleStartRecording}
               disabled={disabled}
-              className="flex-1 bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 disabled:from-gray-400 disabled:to-gray-400 disabled:cursor-not-allowed text-white font-bold py-4 px-6 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 text-lg"
+              className="w-44 h-44 rounded-full bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 disabled:from-gray-400 disabled:to-gray-400 disabled:cursor-not-allowed text-white font-bold text-2xl shadow-xl transition-all duration-200 flex items-center justify-center"
             >
               Again
             </button>
           )}
 
-          {(state === 'processing') && (
+          {state === 'processing' && (
             <button
               disabled
-              className="flex-1 bg-gray-400 cursor-not-allowed text-white font-bold py-4 px-6 rounded-xl flex items-center justify-center gap-2 text-lg"
+              className="w-44 h-44 rounded-full bg-gray-400 cursor-not-allowed text-white font-bold text-xl shadow-xl flex items-center justify-center"
             >
-              <span className="animate-spin">⏳</span> Processing...
+              Processing...
             </button>
           )}
         </div>

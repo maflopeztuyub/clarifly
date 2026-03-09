@@ -4,15 +4,11 @@ import { useState } from 'react';
 import Navbar from '@/components/Navbar';
 import RecorderPanel from '@/components/RecorderPanel';
 import TranscriptPanel from '@/components/TranscriptPanel';
-import TaskListPanel from '@/components/TaskListPanel';
 import SpeechControls from '@/components/SpeechControls';
 import { transcribeAudio } from '@/utils/transcription';
-import { generateTasksFromTranscript } from '@/utils/taskGeneration';
-import type { GeneratedTask } from '@/types';
 
 export default function Home() {
   const [transcript, setTranscript] = useState('');
-  const [tasks, setTasks] = useState<GeneratedTask[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
 
   const handleRecordingComplete = async (blob: Blob) => {
@@ -25,10 +21,6 @@ export default function Home() {
       // Transcribe the audio
       const transcribedText = await transcribeAudio(blob);
       setTranscript(transcribedText);
-
-      // Generate tasks from transcript
-      const generatedTasks = generateTasksFromTranscript(transcribedText);
-      setTasks(generatedTasks);
     } catch (error) {
       console.error('Error processing audio:', error);
       alert('An error occurred while processing your audio. Please try again.');
@@ -39,7 +31,6 @@ export default function Home() {
 
   const handleReset = () => {
     setTranscript('');
-    setTasks([]);
   };
 
   return (
@@ -55,23 +46,8 @@ export default function Home() {
           {/* Transcript Panel */}
           <TranscriptPanel transcript={transcript} isProcessing={isProcessing} />
 
-          {/* Task List Panel */}
-          <TaskListPanel tasks={tasks} isProcessing={isProcessing} />
-
           {/* Speech Controls */}
-          {(transcript || tasks.length > 0) && <SpeechControls transcript={transcript} tasks={tasks} />}
-
-          {/* Reset Button */}
-          {(transcript || tasks.length > 0) && (
-            <div className="flex justify-center">
-              <button
-                onClick={handleReset}
-                className="px-8 py-3 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold rounded-xl transition-all"
-              >
-                🔄 Start New Recording
-              </button>
-            </div>
-          )}
+          {transcript && <SpeechControls transcript={transcript} />}
         </div>
       </div>
     </main>
