@@ -80,9 +80,9 @@ export default function RecorderPanel({ onRecordingComplete, disabled = false }:
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100">
+    <div className="min-h-screen flex items-center justify-center bg-white">
 
-      <div className="flex flex-col items-center gap-6">
+      <div className="flex flex-col items-center gap-6 -translate-y-10">
         {(state === 'recording' || (state === 'ready' && duration > 0)) && (
           <div className="text-center">
             <div className="text-5xl font-bold text-blue-600 font-mono mb-2">{formatTime(duration)}</div>
@@ -94,18 +94,18 @@ export default function RecorderPanel({ onRecordingComplete, disabled = false }:
             <button
               onClick={handleStartRecording}
               disabled={disabled}
-              className="w-44 h-44 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 disabled:from-gray-400 disabled:to-gray-400 disabled:cursor-not-allowed text-white font-bold text-2xl shadow-xl transition-all duration-200 flex items-center justify-center"
+              className="w-[400px] h-[400px] rounded-full bg-[#5170ff] hover:bg-[#4058d9] disabled:bg-gray-400 disabled:cursor-not-allowed shadow-xl transition-all duration-200 flex items-center justify-center"
             >
-              Repeat
+              <img src="/logo.png" alt="Clarifly logo" className="w-[70%] h-[70%] object-contain" />
             </button>
           )}
 
           {state === 'recording' && (
             <button
               onClick={handleStopRecording}
-              className="w-44 h-44 rounded-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-bold text-2xl shadow-xl transition-all duration-200 flex items-center justify-center"
+              className="w-[400px] h-[400px] rounded-full bg-[#5170ff] hover:bg-[#4058d9] shadow-xl transition-all duration-200 flex items-center justify-center"
             >
-              Stop
+              <img src="/logo.png" alt="Clarifly logo" className="w-[70%] h-[70%] object-contain" />
             </button>
           )}
 
@@ -113,18 +113,18 @@ export default function RecorderPanel({ onRecordingComplete, disabled = false }:
             <button
               onClick={handleStartRecording}
               disabled={disabled}
-              className="w-44 h-44 rounded-full bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 disabled:from-gray-400 disabled:to-gray-400 disabled:cursor-not-allowed text-white font-bold text-2xl shadow-xl transition-all duration-200 flex items-center justify-center"
+              className="w-[400px] h-[400px] rounded-full bg-[#5170ff] hover:bg-[#4058d9] disabled:bg-gray-400 disabled:cursor-not-allowed shadow-xl transition-all duration-200 flex items-center justify-center"
             >
-              Again
+              <img src="/logo.png" alt="Clarifly logo" className="w-[70%] h-[70%] object-contain" />
             </button>
           )}
 
           {state === 'processing' && (
             <button
               disabled
-              className="w-44 h-44 rounded-full bg-gray-400 cursor-not-allowed text-white font-bold text-xl shadow-xl flex items-center justify-center"
+              className="w-[400px] h-[400px] rounded-full bg-[#5170ff] cursor-not-allowed shadow-xl flex items-center justify-center opacity-50"
             >
-              Processing...
+              <img src="/logo.png" alt="Clarifly logo" className="w-[70%] h-[70%] object-contain" />
             </button>
           )}
         </div>

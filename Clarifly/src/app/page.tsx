@@ -18,7 +18,7 @@ export default function Home() {
       <Navbar />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12 lg:pb-16">
-        <div className="space-y-8">
+        <div className="space-y-0">
           <RecorderPanel onRecordingComplete={handleRecordingComplete} />
           <TranscriptPanel transcript={transcript} />
           {transcript && <SpeechControls transcript={transcript} />}
