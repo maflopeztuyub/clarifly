@@ -1,47 +1,65 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { startRecording, stopRecording, getRecordingDuration } from '@/utils/audioRecording';
+import { useState, useRef } from 'react';
+import { startLiveTranscription, stopLiveTranscription } from '@/utils/transcription';
 import type { RecordingState } from '@/types';
 
 interface RecorderPanelProps {
-  onRecordingComplete: (audioBlob: Blob) => void;
+  onRecordingComplete: (transcript: string) => void;
   disabled?: boolean;
 }
 
 export default function RecorderPanel({ onRecordingComplete, disabled = false }: RecorderPanelProps) {
   const [state, setState] = useState<RecordingState>('idle');
-  const [duration, setDuration] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const startTimeRef = useRef(0);
+  const [duration, setDuration] = useState(0);
+  const durationIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  useEffect(() => {
-    if (state !== 'recording') return;
+  const updateDuration = () => {
+    const elapsed = Math.floor((Date.now() - startTimeRef.current) / 1000);
+    setDuration(elapsed);
+  };
 
-    const interval = setInterval(() => {
-      setDuration(getRecordingDuration());
-    }, 100);
-
-    return () => clearInterval(interval);
-  }, [state]);
-
-  const handleStartRecording = async () => {
+  const handleStartRecording = () => {
     try {
       setError(null);
       setState('recording');
       setDuration(0);
-      await startRecording();
+      startTimeRef.current = Date.now();
+
+      startLiveTranscription(() => {});
+
+      if (durationIntervalRef.current) {
+        clearInterval(durationIntervalRef.current);
+      }
+      durationIntervalRef.current = setInterval(updateDuration, 100);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to start recording';
       setError(errorMessage);
       setState('idle');
+      if (durationIntervalRef.current) {
+        clearInterval(durationIntervalRef.current);
+      }
     }
   };
 
-  const handleStopRecording = async () => {
+  const handleStopRecording = () => {
     try {
+      if (durationIntervalRef.current) {
+        clearInterval(durationIntervalRef.current);
+      }
+
       setState('processing');
-      const audioBlob = await stopRecording();
-      onRecordingComplete(audioBlob);
+      const transcript = stopLiveTranscription();
+
+      if (!transcript) {
+        setError('No speech detected');
+        setState('idle');
+        return;
+      }
+
+      onRecordingComplete(transcript);
       setState('ready');
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to stop recording';
@@ -63,12 +81,6 @@ export default function RecorderPanel({ onRecordingComplete, disabled = false }:
 
   return (
     <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100">
-      {error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-red-800 font-medium">⚠️ {error}</p>
-          <p className="text-sm text-red-700 mt-1">Make sure you allow microphone access in your browser.</p>
-        </div>
-      )}
 
       <div className="flex flex-col items-center gap-6">
         {(state === 'recording' || (state === 'ready' && duration > 0)) && (
