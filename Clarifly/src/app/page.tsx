@@ -4,25 +4,23 @@ import { useState } from 'react';
 import Navbar from '@/components/Navbar';
 import RecorderPanel from '@/components/RecorderPanel';
 import TranscriptPanel from '@/components/TranscriptPanel';
-import SpeechControls from '@/components/SpeechControls';
+import type { CapturedStep } from '@/types';
 
 export default function Home() {
-  const [transcript, setTranscript] = useState('');
+  const [capturedTranscript, setCapturedTranscript] = useState('');
+  const [steps, setSteps] = useState<CapturedStep[]>([]);
 
-  const handleRecordingComplete = (transcriptText: string) => {
-    setTranscript(transcriptText);
+  const handleCapture = (transcript: string, capturedSteps: CapturedStep[]) => {
+    setCapturedTranscript(transcript);
+    setSteps(capturedSteps);
   };
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-yellow-50">
+    <main className="min-h-screen bg-white">
       <Navbar />
-
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12 lg:pb-16">
-        <div className="space-y-0">
-          <RecorderPanel onRecordingComplete={handleRecordingComplete} />
-          <TranscriptPanel transcript={transcript} />
-          {transcript && <SpeechControls transcript={transcript} />}
-        </div>
+        <RecorderPanel onCapture={handleCapture} />
+        {capturedTranscript && <TranscriptPanel transcript={capturedTranscript} steps={steps} />}
       </div>
     </main>
   );

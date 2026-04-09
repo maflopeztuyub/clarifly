@@ -15,6 +15,11 @@ export interface GeneratedTask {
   confidence: number;
 }
 
+export interface CapturedStep {
+  id: string;
+  text: string;
+}
+
 export interface RecordingResult {
   audioBlob: Blob;
   duration: number;

@@ -1,16 +1,23 @@
 'use client';
 
 /**
- * Web Speech API transcription service
- * Uses the browser's built-in speech recognition (no API keys required)
+ * Web Speech API transcription service with rolling buffer
+ * Maintains continuous passive listening with access to recent 60 seconds of speech
  */
 
+interface TranscriptChunk {
+  text: string;
+  timestamp: number;
+}
+
 let recognition: SpeechRecognition | null = null;
-let finalTranscript = '';
-let interimTranscript = '';
 let isListening = false;
 let shouldStop = false;
-let onUpdateCallback: ((text: string) => void) | null = null;
+let transcriptBuffer: TranscriptChunk[] = [];
+let interimTranscript = '';
+let lastChunkEndTime = 0;
+const BUFFER_DURATION = 60000; // 60 seconds in milliseconds
+const SILENCE_THRESHOLD = 2000; // Consider it a new chunk if gap > 2 seconds
 
 // Initialize speech recognition with browser-specific APIs
 function initializeRecognition(): SpeechRecognition {
@@ -32,21 +39,38 @@ function initializeRecognition(): SpeechRecognition {
   // Handle results
   recognition.onresult = (event: SpeechRecognitionEvent) => {
     interimTranscript = '';
+    const now = Date.now();
 
     for (let i = event.resultIndex; i < event.results.length; i++) {
       const transcript = event.results[i][0].transcript;
 
       if (event.results[i].isFinal) {
-        finalTranscript += transcript + ' ';
+        // Check if there's been a long silence since last chunk
+        if (lastChunkEndTime > 0 && now - lastChunkEndTime > SILENCE_THRESHOLD) {
+          // Create a new separate chunk
+          transcriptBuffer.push({
+            text: transcript.trim(),
+            timestamp: now,
+          });
+        } else if (transcriptBuffer.length === 0) {
+          // First chunk
+          transcriptBuffer.push({
+            text: transcript.trim(),
+            timestamp: now,
+          });
+        } else {
+          // Append to the last chunk with a space
+          const lastChunk = transcriptBuffer[transcriptBuffer.length - 1];
+          lastChunk.text = (lastChunk.text + ' ' + transcript.trim()).trim();
+        }
+        lastChunkEndTime = now;
       } else {
         interimTranscript += transcript;
       }
     }
 
-    // Update the callback with combined transcript
-    if (onUpdateCallback) {
-      onUpdateCallback(finalTranscript + interimTranscript);
-    }
+    // Prune old entries to maintain the buffer window
+    pruneOldChunks();
   };
 
   // Handle errors
@@ -76,15 +100,22 @@ function initializeRecognition(): SpeechRecognition {
 }
 
 /**
- * Start live transcription and continuously call onUpdate with the running transcript
- * @param onUpdate Callback function that receives the transcript text as it's recognized
+ * Remove entries older than the buffer window
  */
-export function startLiveTranscription(onUpdate: (text: string) => void): void {
+function pruneOldChunks(): void {
+  const cutoffTime = Date.now() - BUFFER_DURATION;
+  transcriptBuffer = transcriptBuffer.filter(chunk => chunk.timestamp > cutoffTime);
+}
+
+/**
+ * Start continuous passive listening in the background
+ */
+export function startContinuousListening(): void {
   try {
-    finalTranscript = '';
-    interimTranscript = '';
     shouldStop = false;
-    onUpdateCallback = onUpdate;
+    transcriptBuffer = [];
+    lastChunkEndTime = 0;
+    interimTranscript = '';
 
     const rec = initializeRecognition();
     
@@ -95,18 +126,16 @@ export function startLiveTranscription(onUpdate: (text: string) => void): void {
     rec.start();
     isListening = true;
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Failed to start transcription';
+    const message = error instanceof Error ? error.message : 'Failed to start listening';
     throw new Error(message);
   }
 }
 
 /**
- * Stop live transcription and return the final accumulated transcript
- * @returns The final transcript text that was recognized
+ * Stop continuous listening
  */
-export function stopLiveTranscription(): string {
+export function stopContinuousListening(): void {
   shouldStop = true;
-  onUpdateCallback = null;
 
   if (recognition && isListening) {
     try {
@@ -117,9 +146,15 @@ export function stopLiveTranscription(): string {
   }
 
   isListening = false;
-  const result = finalTranscript.trim();
-  finalTranscript = '';
-  interimTranscript = '';
+}
 
-  return result;
+/**
+ * Get the recent transcript from the rolling buffer
+ * @param seconds How many seconds back to retrieve (default 60)
+ * @returns Concatenated transcript from the buffer window
+ */
+export function getRecentTranscript(seconds: number = 60): string {
+  const cutoffTime = Date.now() - (seconds * 1000);
+  const recentChunks = transcriptBuffer.filter(chunk => chunk.timestamp > cutoffTime);
+  return recentChunks.map(chunk => chunk.text).join(' ').trim();
 }

@@ -1,4 +1,4 @@
-import type { GeneratedTask, PriorityLevel, ClarityLevel } from '@/types';
+import type { GeneratedTask, PriorityLevel, ClarityLevel, CapturedStep } from '@/types';
 
 interface TaskPattern {
   regex: RegExp;
@@ -216,4 +216,22 @@ export function generateTasksFromTranscript(transcript: string): GeneratedTask[]
   generatedTasks.sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
 
   return generatedTasks;
+}
+
+/**
+ * Generate simple step text from transcript (lightweight version for UI display)
+ * Returns just the clean step text without metadata
+ */
+export function generateSimpleSteps(transcript: string): CapturedStep[] {
+  if (!transcript || transcript.trim().length === 0) {
+    return [];
+  }
+
+  const extractedTasks = extractTasksFromTranscript(transcript);
+  
+  // Return just the rephrased text, simplified for display
+  return extractedTasks.map((task, index) => ({
+    id: `step-${index}-${Date.now()}`,
+    text: smartRephraseTask(task.text).replace(/\.$/, ''), // Remove trailing period for list display
+  }));
 }

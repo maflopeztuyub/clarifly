@@ -1,133 +1,80 @@
 'use client';
 
-import { useState, useRef } from 'react';
-import { startLiveTranscription, stopLiveTranscription } from '@/utils/transcription';
-import type { RecordingState } from '@/types';
+import { useState, useEffect } from 'react';
+import { startContinuousListening, stopContinuousListening, getRecentTranscript } from '@/utils/transcription';
+import { generateSimpleSteps } from '@/utils/taskGeneration';
+import type { CapturedStep } from '@/types';
 
 interface RecorderPanelProps {
-  onRecordingComplete: (transcript: string) => void;
+  onCapture: (transcript: string, steps: CapturedStep[]) => void;
   disabled?: boolean;
 }
 
-export default function RecorderPanel({ onRecordingComplete, disabled = false }: RecorderPanelProps) {
-  const [state, setState] = useState<RecordingState>('idle');
+export default function RecorderPanel({ onCapture, disabled = false }: RecorderPanelProps) {
   const [error, setError] = useState<string | null>(null);
-  const startTimeRef = useRef(0);
-  const [duration, setDuration] = useState(0);
-  const durationIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const [isListening, setIsListening] = useState(false);
 
-  const updateDuration = () => {
-    const elapsed = Math.floor((Date.now() - startTimeRef.current) / 1000);
-    setDuration(elapsed);
-  };
-
-  const handleStartRecording = () => {
+  useEffect(() => {
     try {
       setError(null);
-      setState('recording');
-      setDuration(0);
-      startTimeRef.current = Date.now();
-
-      startLiveTranscription(() => {});
-
-      if (durationIntervalRef.current) {
-        clearInterval(durationIntervalRef.current);
-      }
-      durationIntervalRef.current = setInterval(updateDuration, 100);
+      startContinuousListening();
+      setIsListening(true);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to start recording';
+      const errorMessage = err instanceof Error ? err.message : 'Failed to start listening';
       setError(errorMessage);
-      setState('idle');
-      if (durationIntervalRef.current) {
-        clearInterval(durationIntervalRef.current);
-      }
+      setIsListening(false);
     }
-  };
 
-  const handleStopRecording = () => {
+    return () => {
+      stopContinuousListening();
+    };
+  }, []);
+
+  const handleCapture = () => {
     try {
-      if (durationIntervalRef.current) {
-        clearInterval(durationIntervalRef.current);
-      }
+      setError(null);
+      const recentTranscript = getRecentTranscript(60);
 
-      setState('processing');
-      const transcript = stopLiveTranscription();
-
-      if (!transcript) {
-        setError('No speech detected');
-        setState('idle');
+      if (!recentTranscript || recentTranscript.length < 5) {
+        setError('No speech detected. Please speak something first.');
         return;
       }
 
-      onRecordingComplete(transcript);
-      setState('ready');
+      const steps = generateSimpleSteps(recentTranscript);
+      onCapture(recentTranscript, steps);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to stop recording';
+      const errorMessage = err instanceof Error ? err.message : 'Failed to capture';
       setError(errorMessage);
-      setState('idle');
     }
-  };
-
-  const formatTime = (seconds: number): string => {
-    const hrs = Math.floor(seconds / 3600);
-    const mins = Math.floor((seconds % 3600) / 60);
-    const secs = seconds % 60;
-
-    if (hrs > 0) {
-      return `${hrs}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-    }
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-white">
-
       <div className="flex flex-col items-center gap-6 -translate-y-10">
-        {(state === 'recording' || (state === 'ready' && duration > 0)) && (
-          <div className="text-center">
-            <div className="text-5xl font-bold text-blue-600 font-mono mb-2">{formatTime(duration)}</div>
+        <div className="text-center">
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">Clarifly</h1>
+          <p className="text-gray-600">Passive listening capture</p>
+        </div>
+
+        <button
+          onClick={handleCapture}
+          disabled={disabled || !isListening}
+          className="w-[200px] h-[200px] rounded-full bg-[#5170ff] hover:bg-[#4058d9] disabled:bg-gray-400 disabled:cursor-not-allowed shadow-lg transition-all duration-200 flex items-center justify-center text-white font-semibold"
+        >
+          Capture
+        </button>
+
+        {isListening && (
+          <div className="text-center text-sm text-gray-500">
+            Listening...
           </div>
         )}
 
-        <div className="flex justify-center w-full">
-          {state === 'idle' && (
-            <button
-              onClick={handleStartRecording}
-              disabled={disabled}
-              className="w-[400px] h-[400px] rounded-full bg-[#5170ff] hover:bg-[#4058d9] disabled:bg-gray-400 disabled:cursor-not-allowed shadow-xl transition-all duration-200 flex items-center justify-center"
-            >
-              <img src="/logo.png" alt="Clarifly logo" className="w-[70%] h-[70%] object-contain" />
-            </button>
-          )}
-
-          {state === 'recording' && (
-            <button
-              onClick={handleStopRecording}
-              className="w-[400px] h-[400px] rounded-full bg-[#5170ff] hover:bg-[#4058d9] shadow-xl transition-all duration-200 flex items-center justify-center"
-            >
-              <img src="/logo.png" alt="Clarifly logo" className="w-[70%] h-[70%] object-contain" />
-            </button>
-          )}
-
-          {state === 'ready' && (
-            <button
-              onClick={handleStartRecording}
-              disabled={disabled}
-              className="w-[400px] h-[400px] rounded-full bg-[#5170ff] hover:bg-[#4058d9] disabled:bg-gray-400 disabled:cursor-not-allowed shadow-xl transition-all duration-200 flex items-center justify-center"
-            >
-              <img src="/logo.png" alt="Clarifly logo" className="w-[70%] h-[70%] object-contain" />
-            </button>
-          )}
-
-          {state === 'processing' && (
-            <button
-              disabled
-              className="w-[400px] h-[400px] rounded-full bg-[#5170ff] cursor-not-allowed shadow-xl flex items-center justify-center opacity-50"
-            >
-              <img src="/logo.png" alt="Clarifly logo" className="w-[70%] h-[70%] object-contain" />
-            </button>
-          )}
-        </div>
+        {error && (
+          <div className="text-center text-sm text-red-600">
+            {error}
+          </div>
+        )}
       </div>
     </div>
   );
