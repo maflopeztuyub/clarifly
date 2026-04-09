@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { startContinuousListening, stopContinuousListening, getRecentTranscript } from '@/utils/transcription';
-import { generateSimpleSteps } from '@/utils/taskGeneration';
+import { generateSimpleSteps, cleanTranscript } from '@/utils/taskGeneration';
 import type { CapturedStep } from '@/types';
 
 interface RecorderPanelProps {
@@ -40,8 +40,9 @@ export default function RecorderPanel({ onCapture, disabled = false }: RecorderP
         return;
       }
 
+      const cleanedTranscript = cleanTranscript(recentTranscript);
       const steps = generateSimpleSteps(recentTranscript);
-      onCapture(recentTranscript, steps);
+      onCapture(cleanedTranscript, steps);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to capture';
       setError(errorMessage);
@@ -49,19 +50,19 @@ export default function RecorderPanel({ onCapture, disabled = false }: RecorderP
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-white">
-      <div className="flex flex-col items-center gap-6 -translate-y-10">
-        <div className="text-center">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Clarifly</h1>
-          <p className="text-gray-600">Passive listening capture</p>
-        </div>
+    <div className="flex items-center justify-center bg-white pt-16">
+      <div className="flex flex-col items-center gap-6">
 
         <button
           onClick={handleCapture}
           disabled={disabled || !isListening}
-          className="w-[200px] h-[200px] rounded-full bg-[#5170ff] hover:bg-[#4058d9] disabled:bg-gray-400 disabled:cursor-not-allowed shadow-lg transition-all duration-200 flex items-center justify-center text-white font-semibold"
+          className="w-[200px] h-[200px] rounded-full bg-[#5170ff] hover:bg-[#4058d9] disabled:bg-gray-400 disabled:cursor-not-allowed shadow-lg transition-all duration-200 flex items-center justify-center"
         >
-          Capture
+          <img
+            src="/logo.png"
+            alt="Clarifly"
+            className="w-[140px] h-[140px] object-contain"
+          />
         </button>
 
         {isListening && (

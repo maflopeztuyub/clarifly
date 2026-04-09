@@ -219,19 +219,112 @@ export function generateTasksFromTranscript(transcript: string): GeneratedTask[]
 }
 
 /**
- * Generate simple step text from transcript (lightweight version for UI display)
- * Returns just the clean step text without metadata
+ * Clean raw transcript for display
+ * Removes filler words, collapses spaces, normalizes punctuation while preserving meaning
  */
-export function generateSimpleSteps(transcript: string): CapturedStep[] {
+export function cleanTranscript(transcript: string): string {
+  if (!transcript || transcript.trim().length === 0) {
+    return '';
+  }
+
+  let cleaned = transcript.trim();
+
+  // Collapse multiple spaces
+  cleaned = cleaned.replace(/\s+/g, ' ');
+
+  // Remove isolated filler words and phrases
+  // Only remove when they are standalone, not part of other words
+  cleaned = cleaned.replace(/\b(um|uh|like|basically|sort of|kind of|i guess|you know|gonna|wanna|gotta)\b\s*/gi, '');
+
+  // Fix spacing
+  cleaned = cleaned.replace(/\s+/g, ' ').trim();
+
+  // Remove leading/trailing punctuation from sentences
+  cleaned = cleaned.replace(/^\s*[.,;:!?]+\s*/, '').replace(/\s*[.,;:!?]+\s*$/, '');
+
+  // Collapse multiple punctuation marks
+  cleaned = cleaned.replace(/([.!?])\1+/g, '$1');
+
+  // Fix spacing around punctuation
+  cleaned = cleaned.replace(/\s+([.!?,;:])/g, '$1');
+  cleaned = cleaned.replace(/([.!?])\s+/g, '$1 ');
+
+  // Trim again
+  return cleaned.trim();
+}
+
+/**
+ * Generate improved steps from transcript
+ * Splits intelligently on "next" keyword, with fallback to other separators
+ * Each step is a simple, actionable item without boilerplate
+ */
+export function generateImprovedSteps(transcript: string): CapturedStep[] {
   if (!transcript || transcript.trim().length === 0) {
     return [];
   }
 
-  const extractedTasks = extractTasksFromTranscript(transcript);
-  
-  // Return just the rephrased text, simplified for display
-  return extractedTasks.map((task, index) => ({
-    id: `step-${index}-${Date.now()}`,
-    text: smartRephraseTask(task.text).replace(/\.$/, ''), // Remove trailing period for list display
-  }));
+  let segments: string[] = [];
+
+  // First priority: split on "next" keyword
+  if (/\bnext\b/i.test(transcript)) {
+    // Split on "next" with optional preceding "and"
+    // Also remove the word "next" itself from the start of segments
+    segments = transcript
+      .split(/\s+(?:and\s+)?next\s+/i)
+      .map(seg => seg.trim());
+  } else {
+    // Fallback: split on other transition words and sentence endings
+    // Look for: periods, "then", "after that", "finally", "also"
+    segments = transcript
+      .split(/(?:[.!?]+\s+|(?:\bthen\b|\bafter\s+that\b|\bfinally\b|\balso\b)\s*(?:[.!?]*\s+)?)/i)
+      .map(seg => seg.trim());
+  }
+
+  // Clean and filter segments into steps
+  const steps: CapturedStep[] = segments
+    .filter(seg => seg && seg.length > 5) // Filter out empty or very short segments
+    .map((seg, index) => {
+      // Clean up the segment
+      let text = seg.trim();
+
+      // Remove leading/trailing punctuation
+      text = text.replace(/^[.,;:!?]+\s*/, '').replace(/\s*[.,;:!?]+$/, '');
+
+      // Capitalize first letter
+      text = text.charAt(0).toUpperCase() + text.slice(1);
+
+      // Ensure it ends with proper punctuation
+      if (!text.endsWith('.') && !text.endsWith('!') && !text.endsWith('?')) {
+        text += '.';
+      }
+
+      return {
+        id: `step-${index}-${Date.now()}`,
+        text,
+      };
+    });
+
+  // If we got no steps, fall back to sentence-based extraction
+  if (steps.length === 0) {
+    const sentences = transcript
+      .split(/[.!?]+/)
+      .map(s => s.trim())
+      .filter(s => s.length > 5);
+
+    return sentences.map((sentence, index) => ({
+      id: `step-${index}-${Date.now()}`,
+      text: sentence.charAt(0).toUpperCase() + sentence.slice(1) + '.',
+    }));
+  }
+
+  return steps;
+}
+
+/**
+ * Generate simple step text from transcript (lightweight version for UI display)
+ * Returns just the clean step text without metadata
+ */
+export function generateSimpleSteps(transcript: string): CapturedStep[] {
+  // Use the improved step generation instead
+  return generateImprovedSteps(transcript);
 }
