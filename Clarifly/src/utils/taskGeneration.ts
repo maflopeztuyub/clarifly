@@ -219,6 +219,36 @@ export function generateTasksFromTranscript(transcript: string): GeneratedTask[]
 }
 
 /**
+ * Collapse repeated adjacent words (e.g., "open open open" -> "open")
+ */
+function collapseRepeatedWords(text: string): string {
+  // Match word boundaries and collapse repeated words, case-insensitive
+  return text.replace(/\b(\w+)(?:\s+\1)+\b/gi, '$1');
+}
+
+/**
+ * Collapse repeated adjacent phrases
+ * Finds patterns like "open your book open your book" and collapses to single instance
+ */
+function collapseRepeatedPhrases(text: string): string {
+  // Look for repeated 2-4 word phrases
+  // Match phrases that repeat immediately after themselves
+  let result = text;
+  
+  // Try to find and collapse repeated short phrases (2-4 words)
+  for (let phraseLength = 4; phraseLength >= 2; phraseLength--) {
+    // Create a pattern that matches repeated phrases of this length
+    const pattern = new RegExp(
+      `((?:\\w+\\s+){${phraseLength - 1}}\\w+)\\s+(?:\\1\\s*)+`,
+      'gi'
+    );
+    result = result.replace(pattern, '$1 ');
+  }
+  
+  return result.trim();
+}
+
+/**
  * Clean raw transcript for display
  * Removes filler words, collapses spaces, normalizes punctuation while preserving meaning
  */
@@ -231,6 +261,12 @@ export function cleanTranscript(transcript: string): string {
 
   // Collapse multiple spaces
   cleaned = cleaned.replace(/\s+/g, ' ');
+
+  // Collapse repeated adjacent words (open open open -> open)
+  cleaned = collapseRepeatedWords(cleaned);
+
+  // Collapse repeated adjacent phrases
+  cleaned = collapseRepeatedPhrases(cleaned);
 
   // Remove isolated filler words and phrases
   // Only remove when they are standalone, not part of other words
@@ -251,6 +287,21 @@ export function cleanTranscript(transcript: string): string {
 
   // Trim again
   return cleaned.trim();
+}
+
+/**
+ * Deduplicate steps - remove near-identical steps
+ */
+function dedupeSteps(steps: CapturedStep[]): CapturedStep[] {
+  const seen = new Set<string>();
+  return steps.filter(step => {
+    const normalized = step.text.toLowerCase().replace(/[.!?]$/, '');
+    if (seen.has(normalized)) {
+      return false;
+    }
+    seen.add(normalized);
+    return true;
+  });
 }
 
 /**
@@ -281,11 +332,13 @@ export function generateImprovedSteps(transcript: string): CapturedStep[] {
   }
 
   // Clean and filter segments into steps
-  const steps: CapturedStep[] = segments
+  let steps: CapturedStep[] = segments
     .filter(seg => seg && seg.length > 5) // Filter out empty or very short segments
     .map((seg, index) => {
-      // Clean up the segment
+      // Clean up the segment: remove repetition and filler
       let text = seg.trim();
+      text = collapseRepeatedWords(text);
+      text = collapseRepeatedPhrases(text);
 
       // Remove leading/trailing punctuation
       text = text.replace(/^[.,;:!?]+\s*/, '').replace(/\s*[.,;:!?]+$/, '');
@@ -304,6 +357,9 @@ export function generateImprovedSteps(transcript: string): CapturedStep[] {
       };
     });
 
+  // Deduplicate steps to remove near-identical items
+  steps = dedupeSteps(steps);
+
   // If we got no steps, fall back to sentence-based extraction
   if (steps.length === 0) {
     const sentences = transcript
@@ -311,10 +367,12 @@ export function generateImprovedSteps(transcript: string): CapturedStep[] {
       .map(s => s.trim())
       .filter(s => s.length > 5);
 
-    return sentences.map((sentence, index) => ({
+    steps = sentences.map((sentence, index) => ({
       id: `step-${index}-${Date.now()}`,
       text: sentence.charAt(0).toUpperCase() + sentence.slice(1) + '.',
     }));
+    
+    steps = dedupeSteps(steps);
   }
 
   return steps;
