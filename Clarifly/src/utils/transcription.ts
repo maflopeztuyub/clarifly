@@ -10,7 +10,53 @@ interface TranscriptChunk {
   timestamp: number;
 }
 
-let recognition: SpeechRecognition | null = null;
+// Custom Web Speech API type declarations to avoid conflicts
+interface BrowserSpeechRecognition {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  onstart: (() => void) | null;
+  onend: (() => void) | null;
+  onerror: ((event: BrowserSpeechRecognitionErrorEvent) => void) | null;
+  onresult: ((event: BrowserSpeechRecognitionEvent) => void) | null;
+  start(): void;
+  stop(): void;
+}
+
+interface BrowserSpeechRecognitionAlternative {
+  transcript: string;
+  confidence: number;
+}
+
+interface BrowserSpeechRecognitionResult {
+  [index: number]: BrowserSpeechRecognitionAlternative;
+  length: number;
+  isFinal: boolean;
+}
+
+interface BrowserSpeechRecognitionResultList {
+  [index: number]: BrowserSpeechRecognitionResult;
+  length: number;
+}
+
+interface BrowserSpeechRecognitionEvent {
+  resultIndex: number;
+  results: BrowserSpeechRecognitionResultList;
+}
+
+interface BrowserSpeechRecognitionErrorEvent {
+  error: string;
+}
+
+// Declare window properties for browser Speech Recognition API
+declare global {
+  interface Window {
+    SpeechRecognition?: new () => BrowserSpeechRecognition;
+    webkitSpeechRecognition?: new () => BrowserSpeechRecognition;
+  }
+}
+
+let recognition: BrowserSpeechRecognition | null = null;
 let isListening = false;
 let shouldStop = false;
 let transcriptBuffer: TranscriptChunk[] = [];
@@ -37,7 +83,7 @@ function initializeRecognition(): SpeechRecognition {
   recognition.lang = 'en-US';
 
   // Handle results
-  recognition.onresult = (event: SpeechRecognitionEvent) => {
+  recognition.onresult = (event: BrowserSpeechRecognitionEvent) => {
     interimTranscript = '';
     const now = Date.now();
 
@@ -74,7 +120,7 @@ function initializeRecognition(): SpeechRecognition {
   };
 
   // Handle errors
-  recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
+  recognition.onerror = (event: BrowserSpeechRecognitionErrorEvent) => {
     // Some errors are not critical (e.g., 'no-speech'), so we don't throw
     if (event.error !== 'no-speech' && event.error !== 'audio-capture') {
       console.error('Speech recognition error:', event.error);
