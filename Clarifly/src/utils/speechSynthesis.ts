@@ -3,45 +3,6 @@
  * Uses the Web Speech API to provide text-to-speech functionality
  */
 
-// Minimal Web Speech API type declarations for TypeScript compatibility
-interface SpeechSynthesisUtterance extends EventTarget {
-  text: string;
-  rate: number;
-  pitch: number;
-  volume: number;
-  voice: SpeechSynthesisVoice | null;
-  addEventListener(type: string, listener: EventListener): void;
-}
-
-interface SpeechSynthesisUtteranceConstructor {
-  new (text?: string): SpeechSynthesisUtterance;
-}
-
-interface SpeechSynthesisVoice {
-  voiceURI: string;
-  name: string;
-  lang: string;
-  localService: boolean;
-  default: boolean;
-}
-
-interface SpeechSynthesis extends EventTarget {
-  speaking: boolean;
-  paused: boolean;
-  cancel(): void;
-  pause(): void;
-  resume(): void;
-  speak(utterance: SpeechSynthesisUtterance): void;
-  getVoices(): SpeechSynthesisVoice[];
-}
-
-declare global {
-  interface Window {
-    speechSynthesis: SpeechSynthesis;
-    SpeechSynthesisUtterance: SpeechSynthesisUtteranceConstructor;
-  }
-}
-
 let currentUtterance: SpeechSynthesisUtterance | null = null;
 
 export function speakText(text: string, onEnd?: () => void): void {
